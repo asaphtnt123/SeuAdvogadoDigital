@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Lex - Assistente Jurídico Digital</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="fas fa-balance-scale me-2"></i>
+                <strong>Dr. Lex</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#premium">Planos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#marketplace">Advogados</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#products">Produtos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#affiliate">Seja Parceiro</a>
+                    </li>
+                </ul>
+                <div class="ms-3">
+                    <button class="btn btn-outline-light btn-sm" onclick="showUserMenu()">
+                        <i class="fas fa-user me-1"></i>
+                        <span id="userPlan">Grátis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- User Menu Dropdown -->
+    <div id="userMenu" class="user-menu-dropdown">
+        <div class="user-menu-header">
+            <strong>Seu Plano: <span id="menuUserPlan">Grátis</span></strong>
+        </div>
+        <div class="user-menu-body">
+            <div class="usage-stats">
+                <small>Consultas hoje: <span id="usageCount">0</span>/3</small>
+                <div class="progress mb-2">
+                    <div id="usageProgress" class="progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm w-100 mb-2" onclick="showPremiumPlans()">
+                <i class="fas fa-crown me-1"></i>Upgrade
+            </button>
+            <button class="btn btn-outline-primary btn-sm w-100" onclick="showBilling()">
+                <i class="fas fa-credit-card me-1"></i>Assinatura
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">Assistente Jurídico Inteligente</h1>
+                    <p class="lead mb-4">Orientações jurídicas instantâneas + Acesso a advogados especialistas. Comece grátis e upgrade conforme sua necessidade.</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <button class="btn btn-primary btn-lg" onclick="startConsultation()">
+                            <i class="fas fa-robot me-2"></i>Consultar Grátis
+                        </button>
+                        <button class="btn btn-success btn-lg" onclick="showPremiumPlans()">
+                            <i class="fas fa-crown me-2"></i>Ver Planos Premium
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <small class="text-white-50">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            3 consultas grátis por dia • Sem compromisso
+                        </small>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Warning Section -->
+    <section class="warning-section bg-light py-5">
+        <div class="container">
+            <div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Aviso Legal Importante</h4>
+                <p class="mb-2"><strong>Dr. Lex é uma IA para fins educativos e não substitui um advogado.</strong></p>
+                <ul class="mb-2">
+                    <li>Não constitui assessoria jurídica formal</li>
+                    <li>Não cria relação advogado-cliente</li>
+                    <li>Para casos reais, use nosso marketplace de advogados verificados</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Premium Plans Section -->
+    <section id="premium" class="premium-section py-5 bg-white">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="section-title">Planos Premium</h2>
+                    <p class="section-subtitle">Recursos avançados para necessidades específicas</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Plano Básico -->
+                <div class="col-md-4">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h5>Consultor Básico</h5>
+                            <div class="price">
+                                <span class="currency">R$</span>
+                                <span class="amount">29</span>
+                                <span class="period">/mês</span>
+                            </div>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check text-success me-2"></i>Consultas ilimitadas</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Histórico por 6 meses</li>
+                            <li><i class="fas fa-check text-success me-2"></i>5 modelos de documentos</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Análise de documentos</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Prioridade no atendimento</li>
+                        </ul>
+                        <button class="btn btn-outline-primary w-100" onclick="selectPlan('basic')">
+                            Assinar Agora
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Plano Profissional -->
+                <div class="col-md-4">
+                    <div class="pricing-card featured">
+                        <div class="popular-badge">MAIS POPULAR</div>
+                        <div class="pricing-header">
+                            <h5>Advogado Digital Pro</h5>
+                            <div class="price">
+                                <span class="currency">R$</span>
+                                <span class="amount">97</span>
+                                <span class="period">/mês</span>
+                            </div>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check text-success me-2"></i>Todos os recursos do Básico</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Análise de documentos upload</li>
+                            <li><i class="fas fa-check text-success me-2"></i>20 modelos de petições</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Prioridade no atendimento</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Histórico ilimitado</li>
+                        </ul>
+                        <button class="btn btn-primary w-100" onclick="selectPlan('pro')">
+                            Assinar Agora
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Plano Empresarial -->
+                <div class="col-md-4">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h5>Jurídico Empresarial</h5>
+                            <div class="price">
+                                <span class="currency">R$</span>
+                                <span class="amount">297</span>
+                                <span class="period">/mês</span>
+                            </div>
+                        </div>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check text-success me-2"></i>Todos os recursos do Pro</li>
+                            <li><i class="fas fa-check text-success me-2"></i>5 usuários simultâneos</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Contratos empresariais</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Suporte dedicado</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Relatórios mensais</li>
+                        </ul>
+                        <button class="btn btn-outline-primary w-100" onclick="selectPlan('enterprise')">
+                            Falar com Vendas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marketplace Section -->
+    <section id="marketplace" class="marketplace-section py-5 bg-light">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="section-title">Advogados Parceiros</h2>
+                    <p class="section-subtitle">Conecte-se com especialistas verificados</p>
+                </div>
+            </div>
+            
+            <div class="row g-4" id="lawyersGrid">
+                <!-- Advogados serão carregados via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products-section py-5 bg-white">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="section-title">Produtos Digitais</h2>
+                    <p class="section-subtitle">Modelos prontos e cursos especializados</p>
+                </div>
+            </div>
+            
+            <div class="row g-4" id="productsGrid">
+                <!-- Produtos serão carregados via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Chat Interface -->
+    <div id="chatInterface" class="chat-interface">
+        <div class="chat-container">
+            <div class="chat-header bg-primary text-white">
+                <div class="d-flex align-items-center">
+                    <div class="chat-avatar me-3">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Dr. Lex - Assistente Jurídico</h5>
+                        <small class="opacity-75" id="chatPlanInfo">Plano: Grátis • 3 consultas/dia</small>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-light" onclick="closeChat()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <strong>Olá! Sou o Dr. Lex</strong><br>
+                            Sou um assistente jurídico digital para fins educativos. Posso ajudar você a entender conceitos jurídicos básicos.<br><br>
+                            <strong>📊 Seu Plano Grátis:</strong> 3 consultas por dia<br>
+                            <strong>💎 Premium:</strong> Consultas ilimitadas + análise de documentos<br><br>
+                            Descreva sua situação para começarmos!
+                        </div>
+                        <small class="message-time">Agora</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                    <span>Dr. Lex está digitando...</span>
+                </div>
+                <div class="input-group">
+                    <textarea 
+                        class="form-control" 
+                        id="messageInput" 
+                        placeholder="Descreva sua situação jurídica aqui..." 
+                        rows="2"
+                    ></textarea>
+                    <button class="btn btn-primary" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="chat-disclaimer">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Consultas restantes hoje: <span id="remainingQueries">3</span> • 
+                        <a href="#" onclick="showPremiumPlans()">Fazer upgrade</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalTitle">Assinar Plano</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="paymentModalBody">
+                    <!-- Conteúdo do pagamento será injetado via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
