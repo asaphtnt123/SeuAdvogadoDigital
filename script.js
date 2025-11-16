@@ -1,130 +1,271 @@
-// netlify/functions/chat.js - ASSISTENTE JURÍDICO PROFISSIONAL
-exports.handler = async function(event, context) {
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json'
-    };
+// === CONFIGURAÇÃO === //
+console.log('🚀 Dr. Lex IA - Frontend carregado!');
 
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
-    if (event.httpMethod !== 'POST') {
-        return { statusStatus: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-    }
-
-    try {
-        const { message } = JSON.parse(event.body);
-        console.log('📨 Consulta jurídica:', message);
-
-        // SISTEMA JURÍDICO PROFISSIONAL
-        const resposta = generateLegalResponse(message);
-        
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ 
-                success: true, 
-                response: resposta,
-                source: 'Dr. Lex IA - Assistente Jurídico'
-            })
-        };
-        
-    } catch (error) {
-        console.error('💥 Erro:', error);
-        
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ 
-                success: true, 
-                response: "🔧 **Dr. Lex IA**\n\nEstamos com instabilidade técnica momentânea. Por favor, reformule sua pergunta jurídica.",
-                source: 'Sistema'
-            })
-        };
+const MONETIZATION_SYSTEM = {
+    plans: {
+        free: { name: "Grátis", dailyQueries: 10, price: 0 },
+        premium: { name: "Premium", dailyQueries: 100, price: 49.90 },
+        enterprise: { name: "Empresarial", dailyQueries: 1000, price: 299.90 }
     }
 };
 
-// SISTEMA JURÍDICO PROFISSIONAL ROBUSTO
-function generateLegalResponse(message) {
-    const lowerMessage = message.toLowerCase().trim();
-    
-    // === SAUDAÇÕES PROFISSIONAIS ===
-    if (containsAny(lowerMessage, ['oi', 'olá', 'ola', 'hello', 'iniciar', 'start'])) {
-        return `**Dr. Lex IA** ⚖️\n\n*Saudações! Sou seu assistente jurídico digital.*\n\n🎯 **Como posso ajudá-lo hoje?**\n\n📋 **Áreas de atuação:**\n• 🏢 **Direito Trabalhista**\n• 🛒 **Direito do Consumidor**  \n• 👨‍👩‍👧‍👦 **Direito de Família**\n• 📝 **Direito Civil e Contratos**\n• 🏠 **Direito Imobiliário**\n• 💼 **Direito Empresarial**\n\n💡 *Descreva sua situação para uma orientação jurídica educativa.*`;
-    }
-    
-    if (containsAny(lowerMessage, ['bom dia', 'boa tarde', 'boa noite'])) {
-        return `**Dr. Lex IA** ⚖️\n\n*${lowerMessage.includes('bom dia') ? 'Bom dia' : lowerMessage.includes('boa tarde') ? 'Boa tarde' : 'Boa noite'}! Em que posso auxiliá-lo com questões jurídicas?*`;
-    }
-    
-    if (containsAny(lowerMessage, ['obrigado', 'obrigada', 'valeu', 'agradeço'])) {
-        return `**Dr. Lex IA** ⚖️\n\n*De nada! Fico feliz em poder orientá-lo.*\n\n📞 **Lembre-se:** Esta é uma orientação educativa inicial. Para casos específicos, consulte sempre um advogado.`;
-    }
-    
-    if (containsAny(lowerMessage, ['tchau', 'adeus', 'até logo', 'encerrar'])) {
-        return `**Dr. Lex IA** ⚖️\n\n*Até logo! Espero tê-lo ajudado.*\n\n⚖️ **Importante:** Para análise jurídica completa de seu caso, busque assistência de um profissional qualificado.`;
-    }
+const AI_API_CONFIG = {
+    endpoint: '/.netlify/functions/chat',
+    free: true
+};
 
-    // === DIREITO DO CONSUMIDOR ===
-    if (containsAny(lowerMessage, ['carro', 'veículo', 'veiculo', 'automóvel', 'automovel']) && 
-        containsAny(lowerMessage, ['defeito', 'quebrou', 'problema', 'avaria', 'garantia'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 🚗 Veículo com Defeito - Orientações Jurídicas\n\n### 📅 **Prazos Legais (CDC Art. 26):**\n• **90 dias** para produtos duráveis (vícios aparentes e ocultos)\n• **30 dias** para produtos não duráveis\n\n### 🎯 **Seus Direitos:**\n1. **Substituição** por outro produto\n2. **Restituição** do valor pago\n3. **Abatimento** proporcional do preço\n4. **Reparo** gratuito do produto\n\n### 📋 **Procedimento Recomendado:**\n1. **Notificação Extrajudicial** formal\n2. **Laudo Técnico** independente\n3. **PROCON** para mediação\n4. **Juizado Especial** (até 40 salários mínimos)\n\n⚖️ *Artigo 18 do CDC - Prazo máximo de 30 dias para o reparo*`;
-    }
-    
-    if (containsAny(lowerMessage, ['produto', 'eletrodoméstico', 'eletroeletrônico', 'celular', 'tv', 'geladeira']) && 
-        containsAny(lowerMessage, ['defeito', 'quebrou', 'não funciona', 'garantia'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 🛒 Produto com Defeito - Direito do Consumidor\n\n### ⚡ **Direitos Imediatos (CDC Art. 18):**\n• Reparo gratuito\n• Troca do produto\n• Devolução do valor\n• Abatimento no preço\n\n### ⏰ **Prazos para Reclamação:**\n• **30 dias** - produtos não duráveis\n• **90 dias** - produtos duráveis\n\n### 📝 **Ação Recomendada:**\n1. **Notifique por escrito** a empresa\n2. **Documente** o defeito (fotos/vídeos)\n3. **Exija solução** em 30 dias\n4. **Procure o PROCON** se não resolver\n\n🔍 *Vícios de qualidade podem caracterizar descumprimento contratual*`;
-    }
+let chatHistory = [];
+let userState = { plan: 'free', dailyUsage: 0, totalSpent: 0 };
 
-    // === DIREITO TRABALHISTA ===
-    if (containsAny(lowerMessage, ['demissão', 'demissao', 'demitido', 'demitida', 'rescisão', 'rescisao'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 🏢 Demissão - Direitos Trabalhistas\n\n### 📊 **Demissão Sem Justa Causa:**\n• Saldo de salário\n• Férias vencidas + proporcionais\n• 13º salário proporcional\n• Aviso prévio trabalhado/indenizado\n• FGTS + multa de 40%\n\n### ⚠️ **Demissão Por Justa Causa:**\n• Apenas saldo de salário\n• Férias vencidas (se houver)\n\n### 📋 **Procedimentos:**\n1. **Revise a rescisão** cuidadosamente\n2. **Verifique cálculos** com sindicato\n3. **Documente** todas as comunicações\n4. **Consulte** advogado trabalhista\n\n⏳ *Prazo prescricional: 2 anos da rescisão*`;
+// === FUNÇÕES DO CHAT === //
+function startConsultation() {
+    console.log('Abrindo chatbox...');
+    const chatInterface = document.getElementById('chatInterface');
+    if (chatInterface) {
+        chatInterface.classList.add('active');
+        console.log('✅ Chatbox aberto com sucesso');
+        
+        setTimeout(() => {
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) messageInput.focus();
+        }, 300);
+        
+        updateRemainingQueries();
     }
-    
-    if (containsAny(lowerMessage, ['férias', 'ferias', 'descanso', 'período aquisitivo'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## ⛱️ Férias - Direito Trabalhista\n\n### 📅 **Período Aquisitivo (CLT Art. 130):**\n• **12 meses** de trabalho para adquirir direito\n• **30 dias** corridos de descanso\n\n### 💰 **Remuneração (Art. 142):**\n• Salário integral\n• **+ 1/3 constitucional** (adicional de 33,33%)\n\n### ⚠️ **Direitos Importantes:**\n• Concessão em até 12 meses após aquisição\n• Proibição de fracionamento inferior a 10 dias\n• Indenização em dobro se não concedidas\n\n📞 *Para cálculo específico, consulte contador ou advogado*`;
-    }
-    
-    if (containsAny(lowerMessage, ['hora extra', 'hora extraordinária', 'hextra'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## ⏰ Horas Extras - CLT\n\n### 💰 **Valor da Hora Extra (Art. 59):**\n• **Mínimo 50%** sobre o valor da hora normal\n• Acordos coletivos podem estabelecer percentual maior\n\n### 📊 **Limites Legais:**\n• Máximo **2 horas** extras por dia\n• **Acordo** pode ampliar para até 4 horas\n\n### 🏦 **Banco de Horas:**\n• Compensação em folga em 6 meses\n• Requer acordo individual/coletivo\n\n⚖️ *Controle de jornada é obrigação do empregador*`;
-    }
-
-    // === DIREITO DE FAMÍLIA ===
-    if (containsAny(lowerMessage, ['divórcio', 'divorcio', 'separação', 'separacao'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 💔 Divórcio - Direito de Família\n\n### 📝 **Modalidades:**\n• **Consensual** - acordo entre as partes\n• **Litigioso** - judicial com discordâncias\n• **Extrajudicial** - cartório (sem filhos menores)\n\n### 👨‍👩‍👧‍👦 **Tópicos Essenciais:**\n• **Guarda dos filhos** - compartilhada preferencial\n• **Pensão alimentícia** - necessidade × possibilidade\n• **Partilha de bens** - conforme regime de casamento\n• **Visitação** - direito de convivência\n\n🕊️ *Mediação familiar pode ser alternativa menos conflituosa*`;
-    }
-    
-    if (containsAny(lowerMessage, ['pensão', 'pensao', 'alimentos', 'alimentícia'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 💰 Pensão Alimentícia\n\n### ⚖️ **Princípios Legais:**\n• **Necessidade** de quem recebe\n• **Possibilidade** de quem paga\n• **Proporcionalidade** entre as partes\n• **Reciprocidade** familiar\n\n### 📊 **Itens Incluídos:**\n• Alimentação, moradia, saúde\n• Educação, vestuário, lazer\n• Despesas médicas e medicamentos\n\n### 🔄 **Revisão:**\n• Possível a qualquer tempo\n• Baseada em mudança de situação\n• Judicial ou extrajudicial\n\n👨‍⚖️ *Valor deve atender necessidades básicas e padrão de vida*`;
-    }
-
-    // === DIREITO CIVIL ===
-    if (containsAny(lowerMessage, ['contrato', 'cláusula', 'clausula', 'termo'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 📝 Contratos - Direito Civil\n\n### ⚖️ **Princípios Fundamentais:**\n• **Boa-fé objetiva** (Art. 113 CC)\n• **Função social** do contrato\n• **Equilíbrio contratual**\n• **Revisão por onerosidade excessiva**\n\n### ⚠️ **Cláusulas Abusivas (CDC Art. 51):**\n• São nulas de pleno direito\n• Podem ser anuladas judicialmente\n• Exemplo: limitação excessiva de direitos\n\n### 📋 **Recomendações:**\n• Leia atentamente antes de assinar\n• Busque esclarecimentos sobre dúvidas\n• Consulte advogado para contratos complexos\n\n🔍 *Contratos de adesão têm interpretação favorável ao consumidor*`;
-    }
-    
-    if (containsAny(lowerMessage, ['aluguel', 'locação', 'locacao', 'inquilino', 'proprietário', 'proprietario'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 🏠 Contrato de Aluguel - Lei do Inquilinato\n\n### 📅 **Prazo Mínimo:**\n• **30 meses** para imóveis residenciais\n• Renovação automática por 30 meses\n\n### 💰 **Valores e Reajustes:**\n• **Caução**: máximo 3 meses de aluguel\n• **Reajuste**: por índice contratual (IGPM, IPCA)\n• **Multa rescisória**: geralmente 3 meses\n\n### 🛠️ **Reparos e Manutenção:**\n• **Inquilino**: pequenos reparos e limpeza\n• **Proprietário**: reformas e grandes reparos\n\n📞 *Problemas devem ser comunicados por escrito*`;
-    }
-
-    // === DIREITO EMPRESARIAL ===
-    if (containsAny(lowerMessage, ['empresa', 'sociedade', 'sócio', 'socio', 'empresário'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 💼 Direito Empresarial\n\n### 🏢 **Tipos Societários:**\n• **MEI** - Microempreendedor Individual\n• **LTDA** - Sociedade Limitada\n• **SA** - Sociedade Anônima\n• **EI** - Empresário Individual\n\n### 📋 **Aspectos Importantes:**\n• **Contrato social** - fundamento da sociedade\n• **Responsabilidade** - limitada ou ilimitada\n• **Tributação** - regime adequado\n• **Compliance** - conformidade legal\n\n💡 *Planejamento jurídico empresarial evita problemas futuros*`;
-    }
-
-    // === PERGUNTAS FREQUENTES ===
-    if (containsAny(lowerMessage, ['advogado', 'escritório', 'consultoria', 'honorários'])) {
-        return `**Dr. Lex IA** ⚖️\n\n## 🎯 Como Escolher um Advogado\n\n### ✅ **Critérios Importantes:**\n• **Especialização** na área do seu caso\n• **Experiência** e histórico profissional\n• **Referências** e indicações\n• **Transparência** em honorários\n• **Comunicação** clara e acessível\n\n### 💼 **Primeira Consulta:**\n• Leve todos os documentos relevantes\n• Descreva os fatos cronologicamente\n• Esclareça todas as dúvidas\n• Discuta valores e prazos\n\n📞 *A OAB oferece serviço de indicação de advogados*`;
-    }
-
-    // === RESPOSTA PADRÃO PARA CONSULTAS GERAIS ===
-    return `**Dr. Lex IA** ⚖️\n\n## 🎯 Orientação Jurídica Educativa\n\nObrigado por sua consulta sobre **"${message}"**.\n\n### 📋 **Para uma orientação mais precisa:**\n\n• **Descreva os fatos** em ordem cronológica\n• **Informe prazos** e datas relevantes\n• **Mencione documentos** envolvidos\n• **Especifique** o resultado esperado\n\n### 💡 **Exemplo de Descrição Clara:**\n*"Trabalhei na empresa X de jan/2020 a dez/2022. Fui demitido sem justa causa e não recebi minhas férias de 2021. Gostaria de saber meus direitos."*\n\n⚖️ *Esta é uma orientação educativa inicial. Para análise jurídica completa, consulte um advogado.*\n\n📞 **Áreas de Atuação:** Trabalhista | Consumerista | Família | Civil | Empresarial`;
 }
 
-// Função auxiliar
-function containsAny(text, terms) {
-    return terms.some(term => text.includes(term));
+function closeChat() {
+    console.log('Fechando chatbox...');
+    const chatInterface = document.getElementById('chatInterface');
+    if (chatInterface) {
+        chatInterface.classList.remove('active');
+        saveChatHistory();
+    }
 }
+
+async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput ? messageInput.value.trim() : '';
+
+    if (!message) {
+        console.log('Mensagem vazia');
+        return;
+    }
+
+    console.log('Enviando mensagem:', message);
+
+    // Verifica limite de uso
+    if (userState.dailyUsage >= MONETIZATION_SYSTEM.plans[userState.plan].dailyQueries) {
+        showUpgradePrompt("Limite diário atingido!");
+        return;
+    }
+
+    // Incrementa uso
+    userState.dailyUsage++;
+    saveUserData();
+    updateRemainingQueries();
+
+    // Adiciona mensagem do usuário
+    addMessageToChat('user', message);
+    if (messageInput) {
+        messageInput.value = '';
+    }
+
+    // Mostra digitando
+    showTypingIndicator();
+
+    try {
+        // Processa resposta via Netlify Function
+        const response = await callNetlifyFunction(message);
+        hideTypingIndicator();
+        addMessageToChat('ai', response);
+        
+    } catch (error) {
+        hideTypingIndicator();
+        addMessageToChat('ai', 'Desculpe, estou com dificuldades técnicas. Por favor, tente novamente em alguns instantes.');
+        console.error('Erro no chat:', error);
+    }
+}
+
+// === CHAMADA PARA NETLIFY FUNCTION === //
+async function callNetlifyFunction(userMessage) {
+    try {
+        console.log('📡 Chamando Netlify Function...');
+        
+        const response = await fetch(AI_API_CONFIG.endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: userMessage
+            })
+        });
+
+        console.log('📊 Status:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Resposta:', data);
+        
+        if (data.success) {
+            return data.response;
+        } else {
+            throw new Error('Resposta inválida da function');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro na function:', error);
+        throw error;
+    }
+}
+
+// === FUNÇÕES AUXILIARES === //
+function addMessageToChat(sender, text) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) {
+        console.error('Elemento chatMessages não encontrado!');
+        return;
+    }
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}-message`;
+
+    const avatarIcon = sender === 'user' ? 'fas fa-user' : 'fas fa-robot';
+    const avatarClass = sender === 'user' ? 'user-avatar' : 'ai-avatar';
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar ${avatarClass}">
+            <i class="${avatarIcon}"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-text">${formatMessage(text)}</div>
+            <small class="message-time">${getCurrentTime()}</small>
+        </div>
+    `;
+
+    // Para mensagens do usuário, inverte a ordem
+    if (sender === 'user') {
+        const avatar = messageDiv.querySelector('.message-avatar');
+        const content = messageDiv.querySelector('.message-content');
+        messageDiv.innerHTML = '';
+        messageDiv.appendChild(content);
+        messageDiv.appendChild(avatar);
+    }
+
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+
+    // Salva no histórico
+    chatHistory.push({ sender, text, time: new Date().toISOString() });
+}
+
+function showTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.style.display = 'block';
+        scrollToBottom();
+    }
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.style.display = 'none';
+    }
+}
+
+function formatMessage(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+}
+
+function getCurrentTime() {
+    return new Date().toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+function updateRemainingQueries() {
+    const remaining = MONETIZATION_SYSTEM.plans[userState.plan].dailyQueries - userState.dailyUsage;
+    const element = document.getElementById('remainingQueries');
+    if (element) {
+        element.textContent = remaining;
+    }
+}
+
+function showUpgradePrompt(message) {
+    alert(`⚠️ ${message}\n\nFaça upgrade para consultas ilimitadas!`);
+}
+
+// === INICIALIZAÇÃO === //
+function initializeUserState() {
+    const saved = localStorage.getItem('drLexUserState');
+    if (saved) {
+        userState = JSON.parse(saved);
+    } else {
+        // Estado inicial
+        userState = {
+            plan: 'free',
+            dailyUsage: 0,
+            totalSpent: 0
+        };
+    }
+    console.log('User state inicializado:', userState);
+}
+
+function initializeChat() {
+    const savedHistory = localStorage.getItem('drLexChatHistory');
+    if (savedHistory) {
+        chatHistory = JSON.parse(savedHistory);
+        // Opcional: restaurar histórico visual se quiser
+    }
+    console.log('Chat inicializado');
+}
+
+function saveUserData() {
+    localStorage.setItem('drLexUserState', JSON.stringify(userState));
+}
+
+function saveChatHistory() {
+    localStorage.setItem('drLexChatHistory', JSON.stringify(chatHistory));
+}
+
+// Inicializa quando a página carrega
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado - inicializando Dr. Lex IA...');
+    initializeUserState();
+    initializeChat();
+    updateRemainingQueries();
+});
+
+// Função de teste
+window.testConnection = async function() {
+    try {
+        console.log('🧪 Testando conexão...');
+        const response = await fetch('/.netlify/functions/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: "Teste de conexão"})
+        });
+        const data = await response.json();
+        console.log('✅ Conexão funcionando:', data);
+        return data;
+    } catch (error) {
+        console.log('❌ Erro:', error);
+        return {error: error.message};
+    }
+};
