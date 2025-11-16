@@ -3,7 +3,7 @@
 // Use este serviço GRATUITO como proxy:
 const AI_API_CONFIG = {
     endpoint: 'https://your-username.github.io/your-repo/api-proxy',
-apiKey: 'SUA_CHAVE_AQUI'  // Você vai configurar depois
+apiKey: 'SUA_CHAVE_AQUI' , // Você vai configurar depois
     free: true
 };
 
