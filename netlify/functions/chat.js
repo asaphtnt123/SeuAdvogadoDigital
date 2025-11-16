@@ -1,5 +1,9 @@
-// netlify/functions/chat.js - OPENAI COMPLETA
+// netlify/functions/chat.js - SISTEMA HÍBRIDO INTELIGENTE
 const fetch = require('node-fetch');
+
+// Cache simples para evitar rate limit
+let lastRequestTime = 0;
+const REQUEST_DELAY = 2000; // 2 segundos entre requests
 
 exports.handler = async function(event, context) {
     const headers = {
@@ -19,58 +23,60 @@ exports.handler = async function(event, context) {
 
     try {
         const { message } = JSON.parse(event.body);
-        console.log('📨 Pergunta recebida:', message);
+        console.log('📨 Pergunta:', message);
 
-        // ⚠️ CONFIGURE SUA CHAVE OPENAI NO NETLIFY
+        // ⏰ Controle de rate limit manual
+        const now = Date.now();
+        if (now - lastRequestTime < REQUEST_DELAY) {
+            console.log('⏰ Rate limit manual - usando sistema local');
+            const respostaLocal = generateSmartLocalResponse(message);
+            return sendSuccess(respostaLocal, 'Sistema Local (Rate Limit)');
+        }
+        lastRequestTime = now;
+
+        // 🔑 Verifica chave OpenAI
         const openaiKey = process.env.OPENAI_API_KEY;
         
         if (!openaiKey || openaiKey === 'sua-chave-openai-aqui') {
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({ 
-                    success: true, 
-                    response: "🔧 **Dr. Lex IA** ⚖️\n\n*Sistema em configuração final.*\n\nPor favor, configure a chave OpenAI nas variáveis de ambiente do Netlify.\n\n⚖️ *Em breve com IA completa!*",
-                    source: 'Sistema'
-                })
-            };
+            console.log('🔑 Chave OpenAI não configurada');
+            return sendSuccess(
+                "**Dr. Lex IA** ⚖️\n\n*Sistema em configuração final.*\n\n⚖️ *Em breve com IA completa!*",
+                'Sistema'
+            );
         }
 
-        // PROMPT PROFISSIONAL PARA DR. LEX IA
-        const prompt = `Você é o "Dr. Lex IA", um assistente jurídico brasileiro especializado. 
+        // 🚀 Tenta OpenAI com timeout
+        try {
+            console.log('🔄 Tentando OpenAI...');
+            const respostaOpenAI = await callOpenAIWithTimeout(message, openaiKey);
+            console.log('✅ OpenAI respondeu com sucesso');
+            return sendSuccess(respostaOpenAI, 'OpenAI GPT-3.5 Turbo');
+            
+        } catch (openaiError) {
+            console.log('🔄 OpenAI falhou:', openaiError.message);
+            
+            // Sistema Local Inteligente como fallback
+            const respostaLocal = generateSmartLocalResponse(message);
+            return sendSuccess(respostaLocal, 'Sistema Local Inteligente', openaiError.message);
+        }
+        
+    } catch (error) {
+        console.error('💥 Erro geral:', error);
+        const respostaLocal = generateSmartLocalResponse(message);
+        return sendSuccess(respostaLocal, 'Sistema', error.message);
+    }
+};
 
-# DIRETRIZES PRINCIPAIS:
-1. **Foco Jurídico**: Priorize orientações sobre direito brasileiro
-2. **Linguagem**: Clara, acessível mas profissional
-3. **Formatação**: Use **negrito** para tópicos importantes e quebras de linha
-4. **Postura**: Educado, empático mas objetivo
-5. **Limitações**: Sempre destaque que é orientação inicial educativa
-
-# ÁREAS DE ATUAÇÃO:
-⚖️ **Direito Trabalhista** (CLT, demissão, férias, verbas)
-🛒 **Direito do Consumidor** (CDC, produtos, serviços, garantias)
-👨‍👩‍👧‍👦 **Direito de Família** (divórcio, pensão, guarda, herança)
-📝 **Direito Civil** (contratos, obrigações, responsabilidade)
-🏠 **Direito Imobiliário** (aluguel, compra/venda, condomínio)
-💼 **Direito Empresarial** (sociedades, contratos empresariais)
-
-# FORMATO DE RESPOSTA:
-- Comece com "**Dr. Lex IA** ⚖️"
-- Use emojis moderadamente
-- Estruture com tópicos claros
-- Finalize com observação educativa
-
-Para perguntas não jurídicas, responda de forma educada mas mantenha o foco jurídico quando possível.
-
-PERGUNTA DO USUÁRIO: "${message}"
-
-RESPOSTA:`;
-
-        // CHAMADA PARA OPENAI
+// === FUNÇÃO OPENAI COM TIMEOUT ===
+async function callOpenAIWithTimeout(message, apiKey) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10 segundos
+    
+    try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${openaiKey}`,
+                'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -78,52 +84,91 @@ RESPOSTA:`;
                 messages: [
                     {
                         role: 'system',
-                        content: prompt
+                        content: `Você é o "Dr. Lex IA", assistente jurídico brasileiro. Seja claro, use **negrito** e responda de forma educativa. Áreas: Trabalhista, Consumerista, Família, Civil. Sempre destaque que é orientação inicial.`
+                    },
+                    {
+                        role: 'user',
+                        content: message
                     }
                 ],
-                max_tokens: 800,
-                temperature: 0.7,
-                top_p: 0.9
-            })
+                max_tokens: 600,
+                temperature: 0.7
+            }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeout);
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Erro OpenAI:', response.status, errorText);
-            throw new Error(`OpenAI API error: ${response.status}`);
+            throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
-        const respostaIA = data.choices[0].message.content;
-
-        console.log('✅ Resposta gerada:', respostaIA.substring(0, 100) + '...');
-
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ 
-                success: true, 
-                response: respostaIA,
-                source: 'OpenAI GPT-3.5 Turbo',
-                tokens: data.usage?.total_tokens
-            })
-        };
+        return data.choices[0].message.content;
         
     } catch (error) {
-        console.error('💥 Erro na function:', error);
-        
-        // Fallback inteligente
-        const fallbackResponse = `**Dr. Lex IA** ⚖️\n\n🔧 *Instabilidade técnica momentânea*\n\nSobre sua pergunta, recomendo:\n\n📋 **Para orientação jurídica:**\n• Descreva os fatos detalhadamente\n• Informe prazos e documentos\n• Consulte um advogado para análise específica\n\n⚖️ *Estamos melhorando nosso sistema para atendê-lo melhor!*`;
-        
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ 
-                success: true, 
-                response: fallbackResponse,
-                source: 'Sistema',
-                error: error.message
-            })
-        };
+        clearTimeout(timeout);
+        throw error;
     }
-};
+}
+
+// === SISTEMA LOCAL INTELIGENTE ===
+function generateSmartLocalResponse(message) {
+    const lowerMessage = message.toLowerCase().trim();
+    
+    // SAUDAÇÕES
+    if (containsAny(lowerMessage, ['oi', 'olá', 'ola', 'hello', 'iniciar', 'start'])) {
+        return `**Dr. Lex IA** ⚖️\n\n*Saudações! Sou seu assistente jurídico digital.*\n\n🎯 **Posso ajudá-lo com:**\n• 🏢 **Direito Trabalhista** (demissão, férias, verbas)\n• 🛒 **Direito do Consumidor** (produtos, serviços, garantias)\n• 👨‍👩‍👧‍👦 **Direito de Família** (divórcio, pensão, guarda)\n• 📝 **Direito Civil** (contratos, obrigações)\n\n💡 *Descreva sua situação para orientação jurídica educativa.*`;
+    }
+    
+    if (containsAny(lowerMessage, ['bom dia', 'boa tarde', 'boa noite'])) {
+        return `**Dr. Lex IA** ⚖️\n\n*${lowerMessage.includes('bom dia') ? 'Bom dia' : lowerMessage.includes('boa tarde') ? 'Boa tarde' : 'Boa noite'}! Em que posso auxiliá-lo com questões jurídicas?*`;
+    }
+    
+    if (containsAny(lowerMessage, ['obrigado', 'obrigada', 'valeu'])) {
+        return `**Dr. Lex IA** ⚖️\n\n*De nada! Fico feliz em poder orientá-lo.*\n\n📞 **Lembre-se:** Esta é uma orientação educativa inicial. Para casos específicos, consulte sempre um advogado.`;
+    }
+    
+    // DIREITO TRABALHISTA
+    if (containsAny(lowerMessage, ['demissão', 'demissao', 'demitido', 'demitida', 'rescisão'])) {
+        return `**Dr. Lex IA** ⚖️\n\n## 🏢 Demissão - Direitos Trabalhistas\n\n**Sem Justa Causa:**\n• Aviso prévio (30 dias + 3/ano)\n• 13º salário proporcional\n• Férias vencidas + proporcionais\n• FGTS + multa de 40%\n• Saldo de salário\n\n**Ações Recomendadas:**\n1. Revise cuidadosamente a rescisão\n2. Documente todas as comunicações\n3. Consulte advogado trabalhista\n\n⏳ *Prazo prescricional: 2 anos*`;
+    }
+    
+    if (containsAny(lowerMessage, ['férias', 'ferias', 'descanso'])) {
+        return `**Dr. Lex IA** ⚖️\n\n## ⛱️ Férias - CLT\n\n**Direitos Adquiridos:**\n• 12 meses de trabalho = direito adquirido\n• 30 dias corridos de descanso\n• + 1/3 constitucional (33,33%)\n• Concessão em até 12 meses após aquisição\n\n💰 *Para cálculo específico, consulte contador ou advogado*`;
+    }
+    
+    // DIREITO DO CONSUMIDOR
+    if (containsAny(lowerMessage, ['produto', 'defeito', 'quebrou', 'não funciona', 'garantia'])) {
+        return `**Dr. Lex IA** ⚖️\n\n## 🛒 Produto com Defeito - CDC\n\n**Prazos Legais:**\n• 30 dias - produtos não duráveis\n• 90 dias - produtos duráveis\n\n**Seus Direitos:**\n1. Reparo gratuito\n2. Troca do produto\n3. Devolução do valor pago\n4. Abatimento proporcional\n\n**Ações:** Notificação → PROCON → Juizado Especial`;
+    }
+    
+    if (containsAny(lowerMessage, ['carro', 'veículo', 'veiculo']) && containsAny(lowerMessage, ['defeito', 'quebrou'])) {
+        return `**Dr. Lex IA** ⚖️\n\n## 🚗 Veículo com Defeito\n\n**CDC - Artigo 26:**\n• 90 dias para vícios ocultos\n• Direito à substituição ou restituição\n\n**Procedimento Recomendado:**\n1. Notificação extrajudicial formal\n2. Laudo técnico independente\n3. PROCON para mediação\n4. Juizado Especial (até 40 salários)\n\n⚖️ *Documente todas as etapas!*`;
+    }
+    
+    // RESPOSTA INTELIGENTE GENÉRICA
+    return `**Dr. Lex IA** ⚖️\n\n🔍 **Consulta Recebida**\n\nPara **"${message}"**, recomendo:\n\n📋 **Para orientação mais precisa:**\n• Descreva os fatos em ordem cronológica\n• Informe documentos relevantes\n• Especifique o resultado esperado\n\n💡 **Exemplo de descrição clara:**\n"Trabalhei na empresa X de jan/2020 a dez/2022. Fui demitido sem justa causa e não recebi minhas férias de 2021."\n\n⚖️ *Orientação educativa inicial - Para análise jurídica completa, consulte advogado.*`;
+}
+
+// === FUNÇÕES AUXILIARES ===
+function sendSuccess(response, source, error = null) {
+    return {
+        statusCode: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            success: true, 
+            response: response,
+            source: source,
+            error: error
+        })
+    };
+}
+
+function containsAny(text, terms) {
+    return terms.some(term => text.includes(term));
+}
