@@ -3,7 +3,7 @@ console.log('🚀 Dr. Lex IA - Frontend carregado!');
 
 const MONETIZATION_SYSTEM = {
     plans: {
-        free: { name: "Grátis", dailyQueries: 10, price: 0 },
+        free: { name: "Grátis", dailyQueries: 100, price: 0 },
         premium: { name: "Premium", dailyQueries: 100, price: 49.90 },
         enterprise: { name: "Empresarial", dailyQueries: 1000, price: 299.90 }
     }
