@@ -3,19 +3,8 @@ const MONETIZATION_SYSTEM = {
     plans: {
         free: {
             name: "Grátis",
-            price: 0,
-            dailyQueries: 3,
-            features: [
-                "3 consultas por dia",
-                "Respostas básicas",
-                "Histórico de 7 dias",
-                "Acesso a modelos simples"
-            ],
-            limitations: [
-                "Sem análise de documentos",
-                "Sem prioridade",
-                "Limite de caracteres"
-            ]
+            dailyQueries: 10,  // Aumentei de 3 para 10
+            price: 0
         },
         basic: {
             name: "Consultor Básico",
@@ -129,6 +118,7 @@ const MONETIZATION_SYSTEM = {
     }
 };
 
+
 // Estado do usuário
 let userState = {
     plan: 'free',
@@ -141,15 +131,7 @@ let userState = {
 // Histórico do chat
 let chatHistory = [];
 
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserData();
-    initializeChat();
-    setupEventListeners();
-    loadMarketplace();
-    loadProducts();
-    updateUsageDisplay();
-});
+
 
 // Carrega dados do usuário
 function loadUserData() {
@@ -228,31 +210,166 @@ function hideUserMenu() {
     document.getElementById('userMenu').classList.remove('show');
 }
 
-// Sistema de chat
+// === INICIALIZAÇÃO === //
+function initializeUserState() {
+    const saved = localStorage.getItem('drLexUserState');
+    if (saved) {
+        userState = JSON.parse(saved);
+    } else {
+        // Estado inicial
+        userState = {
+            plan: 'free',
+            dailyUsage: 0,
+            totalSpent: 0
+        };
+    }
+    console.log('User state inicializado:', userState);
+}
+
+function initializeChat() {
+    const savedHistory = localStorage.getItem('drLexChatHistory');
+    if (savedHistory) {
+        chatHistory = JSON.parse(savedHistory);
+        // Opcional: restaurar histórico visual se quiser
+    }
+    console.log('Chat inicializado');
+}
+
+function saveUserData() {
+    localStorage.setItem('drLexUserState', JSON.stringify(userState));
+}
+
+function saveChatHistory() {
+    localStorage.setItem('drLexChatHistory', JSON.stringify(chatHistory));
+}
+
+// Inicializa quando a página carrega
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado - inicializando...');
+    initializeUserState();
+    initializeChat();
+    updateRemainingQueries();
+});
+
 function startConsultation() {
+    console.log('Abrindo chatbox...');
+    
+    const chatInterface = document.getElementById('chatInterface');
+    
+    if (chatInterface) {
+        // Adiciona a classe active que deve controlar a visibilidade via CSS
+        chatInterface.classList.add('active');
+        
+        console.log('✅ Chatbox aberto com sucesso');
+        
+    } else {
+        console.error('Elemento chatInterface não encontrado!');
+        return;
+    }
+
+    // Verifica limite de uso
     if (userState.dailyUsage >= MONETIZATION_SYSTEM.plans[userState.plan].dailyQueries) {
         showUpgradePrompt("Limite diário atingido!");
         return;
     }
 
-    const chatInterface = document.getElementById('chatInterface');
-    chatInterface.classList.add('active');
-    
+    // Foca no input após abrir
     setTimeout(() => {
-        document.getElementById('messageInput').focus();
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.focus();
+        }
     }, 300);
+    
+    // Atualiza contador
+    updateRemainingQueries();
 }
 
 function closeChat() {
-    document.getElementById('chatInterface').classList.remove('active');
-    saveChatHistory();
+    console.log('Fechando chatbox...');
+    const chatInterface = document.getElementById('chatInterface');
+    if (chatInterface) {
+        chatInterface.classList.remove('active');
+        saveChatHistory();
+    }
+}
+function updateRemainingQueries() {
+    const remaining = MONETIZATION_SYSTEM.plans[userState.plan].dailyQueries - userState.dailyUsage;
+    const element = document.getElementById('remainingQueries');
+    if (element) {
+        element.textContent = remaining;
+        console.log('📊 Consultas restantes:', remaining);
+    }
+}
+// === CONFIGURAÇÃO SEGURA === //
+const AI_API_CONFIG = {
+    endpoint: 'https://asaphtnt123.github.io/SeuAdvogadoDigital/api-proxy',
+    free: true
+};
+
+async function callHuggingFaceAPI(userMessage) {
+    try {
+        console.log('📡 Chamando API via GitHub Pages...');
+        
+        // Para GitHub Pages estático, vamos usar uma solução diferente
+        // já que não podemos executar server-side code
+        return await callHuggingFaceViaProxy(userMessage);
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        throw error;
+    }
 }
 
-function sendMessage() {
-    const messageInput = document.getElementById('messageInput');
-    const message = messageInput.value.trim();
+// Solução usando proxy público
+async function callHuggingFaceViaProxy(userMessage) {
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const apiUrl = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
+    
+    const response = await fetch(proxyUrl + apiUrl, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer SUA_CHAVE_AQUI', // ← Você vai colocar manualmente
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            inputs: userMessage,
+            parameters: {
+                max_length: 300,
+                temperature: 0.7,
+                do_sample: true
+            }
+        })
+    });
+    
+    const data = await response.json();
+    return data[0]?.generated_text || "Resposta da IA";
+}
 
-    if (!message) return;
+// Função generateResponse atualizada
+async function generateResponse(userMessage) {
+    console.log('🎯 Gerando resposta com SEU proxy...');
+    
+    try {
+        const response = await callHuggingFaceAPI(userMessage);
+        return `**Dr. Lex IA** 🤖\n\n${response}\n\n---\n*Resposta gerada por IA através do seu proxy*`;
+        
+    } catch (error) {
+        console.error('❌ Proxy falhou, usando fallback local:', error);
+        return generateLocalResponse(userMessage);
+    }
+}
+async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput ? messageInput.value.trim() : '';
+
+    if (!message) {
+        console.log('Mensagem vazia');
+        return;
+    }
+
+    console.log('Enviando mensagem:', message.substring(0, 50));
 
     // Verifica limite de uso
     if (userState.dailyUsage >= MONETIZATION_SYSTEM.plans[userState.plan].dailyQueries) {
@@ -263,43 +380,52 @@ function sendMessage() {
     // Incrementa uso
     userState.dailyUsage++;
     saveUserData();
+    updateRemainingQueries();
 
     // Adiciona mensagem do usuário
     addMessageToChat('user', message);
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
+    if (messageInput) {
+        messageInput.value = '';
+    }
 
     // Mostra digitando
     showTypingIndicator();
 
-    // Processa resposta
-    setTimeout(() => {
+    try {
+        // Processa resposta
+        const response = await generateResponse(message);
         hideTypingIndicator();
-        const response = generateResponse(message);
         addMessageToChat('ai', response);
         
         // Sugere upgrade após algumas mensagens
         if (userState.dailyUsage >= 2 && userState.plan === 'free') {
             setTimeout(() => {
-                showUpgradePrompt("Quer recursos ilimitados?");
+                showUpgradePrompt("Quer respostas mais precisas? Faça upgrade para Premium!");
             }, 1000);
         }
-    }, 1500);
+    } catch (error) {
+        hideTypingIndicator();
+        addMessageToChat('ai', 'Desculpe, estou com dificuldades técnicas. Por favor, tente novamente em alguns instantes.');
+        console.error('Erro no chat:', error);
+    }
 }
 
+// === FUNÇÕES AUXILIARES DO CHAT === //
 function addMessageToChat(sender, text) {
     const chatMessages = document.getElementById('chatMessages');
-    const messageId = 'msg-' + Date.now();
+    if (!chatMessages) {
+        console.error('Elemento chatMessages não encontrado!');
+        return;
+    }
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}-message`;
-    messageDiv.id = messageId;
 
     const avatarIcon = sender === 'user' ? 'fas fa-user' : 'fas fa-robot';
-    const avatarBg = sender === 'user' ? 'bg-primary' : 'bg-secondary';
+    const avatarClass = sender === 'user' ? 'user-avatar' : 'ai-avatar';
 
     messageDiv.innerHTML = `
-        <div class="message-avatar ${avatarBg}">
+        <div class="message-avatar ${avatarClass}">
             <i class="${avatarIcon}"></i>
         </div>
         <div class="message-content">
@@ -308,9 +434,11 @@ function addMessageToChat(sender, text) {
         </div>
     `;
 
+    // Para mensagens do usuário, inverte a ordem
     if (sender === 'user') {
         const avatar = messageDiv.querySelector('.message-avatar');
         const content = messageDiv.querySelector('.message-content');
+        messageDiv.innerHTML = '';
         messageDiv.appendChild(content);
         messageDiv.appendChild(avatar);
     }
@@ -321,6 +449,191 @@ function addMessageToChat(sender, text) {
     // Salva no histórico
     chatHistory.push({ sender, text, time: new Date().toISOString() });
 }
+
+function showTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.style.display = 'block';
+        scrollToBottom();
+    }
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.style.display = 'none';
+    }
+}
+
+function formatMessage(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+}
+
+function getCurrentTime() {
+    return new Date().toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// === FUNÇÕES DE UPGRADE === //
+function showUpgradePrompt(message) {
+    alert(`⚠️ ${message}\n\nFaça upgrade para consultas ilimitadas!`);
+    // Ou implemente um modal mais elaborado
+}
+
+function showPremiumPlans() {
+    // Role até a seção de planos ou abra modal
+    const pricingSection = document.querySelector('#pricing, .pricing-section');
+    if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    closeChat();
+}
+// Funções auxiliares
+function saveUserData() {
+    localStorage.setItem('drLexUserState', JSON.stringify(userState));
+}
+
+function saveChatHistory() {
+    localStorage.setItem('drLexChatHistory', JSON.stringify(chatHistory));
+}
+
+function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing-indicator';
+    typingDiv.className = 'message ai-message typing';
+    typingDiv.innerHTML = `
+        <div class="message-avatar bg-secondary">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(typingDiv);
+    scrollToBottom();
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+function formatMessage(text) {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+}
+
+function getCurrentTime() {
+    return new Date().toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+
+// === FUNÇÃO DE FALLBACK LOCAL === //
+function generateLocalResponse(userMessage) {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (containsAny(lowerMessage, ['trabalho', 'emprego', 'patrão', 'demissão', 'salário'])) {
+        return generateTrabalhistaResponse();
+    } else if (containsAny(lowerMessage, ['consumidor', 'compra', 'produto', 'loja', 'garantia'])) {
+        return generateConsumeristaResponse();
+    } else if (containsAny(lowerMessage, ['divórcio', 'casamento', 'pensão', 'guarda', 'filho'])) {
+        return generateFamiliaResponse();
+    } else if (containsAny(lowerMessage, ['contrato', 'aluguel', 'compra', 'venda', 'imóvel'])) {
+        return generateCivilResponse();
+    } else {
+        return generateGenericResponse();
+    }
+}
+
+// === FUNÇÃO AUXILIAR === //
+function containsAny(text, terms) {
+    return terms.some(term => text.includes(term));
+}
+
+
+function generateCivilResponse() {
+    return `**Direito Civil - Orientação Educativa**...`;
+}
+
+function generateFamiliaResponse() {
+    return `**Direito de Família - Orientação Educativa**...`;
+}
+
+
+// SUAS FUNÇÕES ORIGINAIS (mantenha como estão)
+function generateTrabalhistaResponse() {
+    return `**Direito Trabalhista - Orientação Educativa**
+
+Com base na sua descrição, aqui estão algumas informações sobre direitos trabalhistas:
+
+**Direitos Fundamentais:**
+• Jornada máxima de 8h/dia e 44h/semana
+• Horas extras com acréscimo mínimo de 50%
+• Férias remuneradas + 1/3 constitucional
+• FGTS e multa de 40% em demissões sem justa causa
+
+**Próximos Passos Sugeridos:**
+1. **Documente tudo:** Salve contracheques, e-mails, comprovantes
+2. **Busque orientação:** Sindicato ou advogado trabalhista
+3. **Considere:** Reclamação trabalhista ou acordo extrajudicial
+
+💡 **Dica:** Use nosso marketplace para conectar com advogados especializados em direito trabalhista.
+
+*Esta é uma orientação educativa. Para análise jurídica completa, consulte um advogado.*`;
+}
+
+function generateConsumeristaResponse() {
+    return `**Direito do Consumidor - Orientação Educativa**
+
+Entendo sua situação consumerista. Algumas informações relevantes:
+
+**Seus Direitos (CDC - Lei 8.078/90):**
+• Produtos devem ser seguros e duráveis
+• Prazo de 30 dias para conserto de produtos duráveis
+• Direito à troca ou devolução do dinheiro
+• Proteção contra publicidade enganosa
+
+**Ações Recomendadas:**
+1. **Notificação extrajudicial:** Formalize sua reclamação
+2. **PROCON:** Gratuito e eficaz para muitos casos
+3. **Juizado Especial:** Até 40 salários mínimos sem advogado
+
+📝 **Recurso Premium:** Assinantes PRO têm acesso a modelos de notificação extrajudicial prontos.
+
+*Orientação educativa. Casos complexos exigem assessoria jurídica profissional.*`;
+}
+
+
+
+
 
 // Sistema de monetização - Planos
 function showPremiumPlans() {
@@ -569,102 +882,35 @@ function formatMessage(text) {
                .replace(/\n/g, '<br>');
 }
 
-// Sistema de resposta da IA (simplificado)
-function generateResponse(userMessage) {
-    const lowerMessage = userMessage.toLowerCase();
+
+// === SISTEMA DE RESET AUTOMÁTICO === //
+function checkAndResetDailyUsage() {
+    const today = new Date().toDateString();
+    const lastReset = localStorage.getItem('drLexLastReset');
     
-    if (containsAny(lowerMessage, ['trabalho', 'emprego', 'patrão'])) {
-        return generateTrabalhistaResponse();
-    } else if (containsAny(lowerMessage, ['consumidor', 'compra', 'produto'])) {
-        return generateConsumeristaResponse();
+    if (lastReset !== today) {
+        userState.dailyUsage = 0;
+        localStorage.setItem('drLexUserState', JSON.stringify(userState));
+        localStorage.setItem('drLexLastReset', today);
+        console.log('🔄 Uso diário resetado para:', userState.dailyUsage);
+    }
+}
+
+// Atualize a inicialização:
+function initializeUserState() {
+    const saved = localStorage.getItem('drLexUserState');
+    if (saved) {
+        userState = JSON.parse(saved);
     } else {
-        return generateGenericResponse();
+        userState = {
+            plan: 'free',
+            dailyUsage: 0,
+            totalSpent: 0
+        };
     }
-}
-
-function generateTrabalhistaResponse() {
-    return `**Direito Trabalhista - Orientação Educativa**
-
-Com base na sua descrição, aqui estão algumas informações sobre direitos trabalhistas:
-
-**Direitos Fundamentais:**
-• Jornada máxima de 8h/dia e 44h/semana
-• Horas extras com acréscimo mínimo de 50%
-• Férias remuneradas + 1/3 constitucional
-• FGTS e multa de 40% em demissões sem justa causa
-
-**Próximos Passos Sugeridos:**
-1. **Documente tudo:** Salve contracheques, e-mails, comprovantes
-2. **Busque orientação:** Sindicato ou advogado trabalhista
-3. **Considere:** Reclamação trabalhista ou acordo extrajudicial
-
-💡 **Dica:** Use nosso marketplace para conectar com advogados especializados em direito trabalhista.
-
-*Esta é uma orientação educativa. Para análise jurídica completa, consulte um advogado.*`;
-}
-
-function generateConsumeristaResponse() {
-    return `**Direito do Consumidor - Orientação Educativa**
-
-Entendo sua situação consumerista. Algumas informações relevantes:
-
-**Seus Direitos (CDC - Lei 8.078/90):**
-• Produtos devem ser seguros e duráveis
-• Prazo de 30 dias para conserto de produtos duráveis
-• Direito à troca ou devolução do dinheiro
-• Proteção contra publicidade enganosa
-
-**Ações Recomendadas:**
-1. **Notificação extrajudicial:** Formalize sua reclamação
-2. **PROCON:** Gratuito e eficaz para muitos casos
-3. **Juizado Especial:** Até 40 salários mínimos sem advogado
-
-📝 **Recurso Premium:** Assinantes PRO têm acesso a modelos de notificação extrajudicial prontos.
-
-*Orientação educativa. Casos complexos exigem assessoria jurídica profissional.*`;
-}
-
-function generateGenericResponse() {
-    return `**Orientação Jurídica Educativa**
-
-Obrigado por compartilhar sua situação. Para que eu possa ajudar melhor:
-
-**Sugiro que me informe:**
-• Qual área do direito parece envolvida
-• Os fatos principais em ordem cronológica  
-• Qual resultado você espera alcançar
-
-**Exemplo de descrição clara:**
-"Comprei um celular em março que parou de funcionar em abril. A loja se recusou a trocar. Quais são meus direitos?"
-
-🎯 **Recursos Disponíveis:**
-• **Grátis:** 3 consultas diárias + orientações básicas
-• **Premium:** Consultas ilimitadas + análise de documentos
-• **Marketplace:** Advogados especialistas por R$ 120-180/consulta
-
-*Estou aqui para orientar educativamente. Decisões jurídicas importantes exigem assessoria profissional.*`;
-}
-
-function containsAny(text, terms) {
-    return terms.some(term => text.includes(term));
-}
-
-function saveChatHistory() {
-    localStorage.setItem('drLexChatHistory', JSON.stringify(chatHistory));
-}
-
-function showBilling() {
-    showMessage('info', `Total gasto: R$ ${userState.totalSpent.toFixed(2)} | Plano atual: ${MONETIZATION_SYSTEM.plans[userState.plan].name}`);
-}
-
-function showEnterpriseContact() {
-    showMessage('info', 'Entre em contato: enterprise@drlex.com.br | (11) 99999-9999');
-}
-
-// Inicializa chat
-function initializeChat() {
-    const savedHistory = localStorage.getItem('drLexChatHistory');
-    if (savedHistory) {
-        chatHistory = JSON.parse(savedHistory);
-    }
+    
+    // VERIFICA E RESETA USO DIÁRIO
+    checkAndResetDailyUsage();
+    
+    console.log('User state inicializado:', userState);
 }
