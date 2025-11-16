@@ -70,13 +70,57 @@ async function sendMessage() {
         console.error('Erro no chat:', error);
     }
 }
-
-// === SISTEMA DE IA - VERSÃO CORRIGIDA === //
 async function generateResponse(userMessage) {
     console.log('🎯 Gerando resposta para:', userMessage);
     
-    // SEMPRE usa local por enquanto - mais estável
-    return generateLocalResponse(userMessage);
+    // Para mensagens muito curtas, usa local
+    if (userMessage.length < 3) {
+        return generateLocalResponse(userMessage);
+    }
+    
+    try {
+        console.log('🤖 Tentando IA real...');
+        const response = await callNetlifyFunction(userMessage);
+        return response;
+    } catch (error) {
+        console.log('🔄 IA real falhou, usando local');
+        return generateLocalResponse(userMessage);
+    }
+}
+
+async function callNetlifyFunction(userMessage) {
+    try {
+        console.log('📡 Conectando com Netlify Function...');
+        
+        const response = await fetch('/.netlify/functions/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: userMessage
+            })
+        });
+
+        console.log('📊 Status:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Resposta IA:', data);
+        
+        if (data.success && data.response) {
+            return `**Dr. Lex IA** 🤖\n\n${data.response}\n\n---\n*Resposta gerada por IA*`;
+        } else {
+            throw new Error('Resposta inválida');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro IA real:', error);
+        throw error;
+    }
 }
 
 // === RESPOSTAS LOCAIS MELHORADAS === //
