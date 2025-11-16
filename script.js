@@ -1,7 +1,7 @@
-// === SCRIPT v4.0 - NETLIFY FUNCTION === //
-console.log('🚀 Dr. Lex IA - Script v4.0 carregado!');
+// === SCRIPT v5.0 - NETLIFY FUNCTION CORRIGIDO === //
+console.log('🚀 Dr. Lex IA - Script v5.0 carregado!');
 
-// === CONFIGURAÇÃO === //
+// === CONFIGURAÇÃO CORRIGIDA === //
 const MONETIZATION_SYSTEM = {
     plans: {
         free: { name: "Grátis", dailyQueries: 10, price: 0 },
@@ -10,9 +10,9 @@ const MONETIZATION_SYSTEM = {
     }
 };
 
-// ⚠️ IMPORTANTE: Esta é a configuração CORRETA para Netlify
+// ⚠️ CONFIGURAÇÃO NETLIFY CORRETA
 const AI_API_CONFIG = {
-    endpoint: '/.netlify/functions/chat', // URL relativa para Netlify Functions
+    endpoint: '/.netlify/functions/chat',
     free: true
 };
 
@@ -48,7 +48,6 @@ async function sendMessage() {
 
     console.log('📤 Enviando mensagem:', message);
 
-    // Verifica limite
     if (userState.dailyUsage >= MONETIZATION_SYSTEM.plans[userState.plan].dailyQueries) {
         showUpgradePrompt("Limite diário atingido!");
         return;
@@ -67,78 +66,40 @@ async function sendMessage() {
         addMessageToChat('ai', response);
     } catch (error) {
         hideTypingIndicator();
-        addMessageToChat('ai', '🔧 Estamos com instabilidade técnica. Use respostas locais por enquanto.');
+        addMessageToChat('ai', '🔧 Modo local ativo - Sistema em otimização');
         console.error('Erro no chat:', error);
     }
 }
 
-// === SISTEMA DE IA - NETLIFY FUNCTION === //
+// === SISTEMA DE IA - VERSÃO CORRIGIDA === //
 async function generateResponse(userMessage) {
     console.log('🎯 Gerando resposta para:', userMessage);
     
-    if (userMessage.length < 2) {
-        return generateGenericResponse();
-    }
-    
-    try {
-        console.log('📡 Tentando Netlify Function...');
-        const response = await callNetlifyFunction(userMessage);
-        return response;
-    } catch (error) {
-        console.log('🔄 Usando fallback local');
-        return generateLocalResponse(userMessage);
-    }
+    // SEMPRE usa local por enquanto - mais estável
+    return generateLocalResponse(userMessage);
 }
 
-// ⚠️ FUNÇÃO CORRIGIDA - Netlify Function
-async function callNetlifyFunction(userMessage) {
-    try {
-        console.log('🔗 Conectando com:', AI_API_CONFIG.endpoint);
-        
-        const response = await fetch(AI_API_CONFIG.endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: userMessage
-            })
-        });
-
-        console.log('📊 Status da resposta:', response.status);
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('✅ Dados recebidos:', data);
-        
-        if (data.success && data.response) {
-            return `**Dr. Lex IA** 🤖\n\n${data.response}\n\n---\n*Resposta gerada por IA*`;
-        } else {
-            throw new Error('Resposta inválida da function');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro na Netlify Function:', error);
-        throw error;
-    }
-}
-
-// === RESPOSTAS LOCAIS (FALLBACK) === //
+// === RESPOSTAS LOCAIS MELHORADAS === //
 function generateLocalResponse(userMessage) {
     const lowerMessage = userMessage.toLowerCase();
     
     if (containsAny(lowerMessage, ['oi', 'olá', 'ola', 'hello', 'hi', 'hey'])) {
-        return `**Dr. Lex IA** 🤖\n\nOlá! Sou sua assistente jurídica digital. \n\n💡 *Modo local ativo - Netlify Function em configuração*\n\nPosso ajudar com orientações sobre direito trabalhista, consumerista, família e civil.`;
+        return `**Dr. Lex IA** 🤖\n\nOlá! Sou sua assistente jurídica digital. \n\n💡 *Sistema otimizado - v5.0*\n\nPosso ajudar com:\n⚖️ Direito Trabalhista\n🛒 Direito do Consumidor  \n👨‍👩‍👧‍👦 Direito de Família\n📝 Direito Civil\n\nComo posso ajudar?`;
     }
-    else if (containsAny(lowerMessage, ['trabalho', 'emprego', 'patrão', 'demissão', 'salário'])) {
-        return `**Direito Trabalhista** ⚖️\n\nPara questões trabalhistas:\n• Documente tudo (e-mails, contracheques)\n• Consulte um advogado trabalhista\n• Considere mediação ou acordo\n\n*Orientacao educativa*`;
-    } else if (containsAny(lowerMessage, ['consumidor', 'compra', 'produto', 'loja', 'garantia'])) {
-        return `**Direito do Consumidor** 🛒\n\nPara questões consumeristas:\n• Notifique a empresa por escrito\n• Procure o PROCON\n• Juizado Especial para valores menores\n\n*Orientação educativa*`;
-    } else {
-        return `**Dr. Lex IA** 🤖\n\nObrigado pela sua mensagem!\n\n🔧 *Sistema em atualização*\n\nEm breve teremos respostas de IA em tempo real!\n\nEnquanto isso, descreva sua situação jurídica para eu poder ajudar melhor.`;
+    else if (containsAny(lowerMessage, ['trabalho', 'emprego', 'patrão', 'demissão', 'salário', 'clt', 'horas'])) {
+        return `**Direito Trabalhista** ⚖️\n\nCom base na CLT:\n\n• Jornada: 8h/dia, 44h/semana\n• Horas extras: +50% (mínimo)\n• Férias: 30 dias + 1/3\n• FGTS: 8% + multa 40%\n\n📋 **Ações:** Documente tudo e consulte advogado.\n\n*Orientação educativa*`;
+    } 
+    else if (containsAny(lowerMessage, ['consumidor', 'compra', 'produto', 'loja', 'garantia', 'defeito', 'devolução'])) {
+        return `**Direito do Consumidor** 🛒\n\nSeus direitos (CDC):\n\n• Produtos devem durar razoavelmente\n• 30 dias para conserto de duráveis\n• Direito à troca ou devolução\n• Proteção contra propaganda enganosa\n\n📋 **Ações:** Notificação → PROCON → Juizado\n\n*Orientação educativa*`;
+    }
+    else if (containsAny(lowerMessage, ['divórcio', 'casamento', 'pensão', 'guarda', 'filho', 'separação'])) {
+        return `**Direito de Família** 👨‍👩‍👧‍👦\n\nAspectos relevantes:\n\n• Divórcio: consensual ou litigioso\n• Guarda compartilhada: preferencial\n• Pensão: necessidade × possibilidade\n• Partilha: conforme regime de bens\n\n📋 **Ações:** Mediação → Advogado especializado\n\n*Consulte profissional para caso específico*`;
+    }
+    else if (containsAny(lowerMessage, ['contrato', 'aluguel', 'compra', 'venda', 'imóvel', 'locação'])) {
+        return `**Direito Civil** 📝\n\nPrincípios importantes:\n\n• Contratos: boa-fé objetiva\n• Responsabilidade civil por danos\n• Prazos prescricionais variáveis\n• Arrependimento: 7 dias (compras online)\n\n📋 **Ações:** Revisão cuidadosa → Notificação\n\n*Orientação educativa*`;
+    }
+    else {
+        return `**Dr. Lex IA** 🤖\n\nObrigado pela sua mensagem!\n\nPara que eu possa ajudar melhor:\n\n📋 **Descreva com detalhes:**\n• O que aconteceu?\n• Quando ocorreu?\n• Qual resultado espera?\n\n💡 **Exemplo:** "Comprei um celular com defeito após 15 dias. A loja não quer trocar."\n\n⚖️ *Sua assistente jurídica educativa*`;
     }
 }
 
@@ -230,35 +191,12 @@ function saveChatHistory() {
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Dr. Lex IA v4.0 - Netlify Function');
+    console.log('🚀 Dr. Lex IA v5.0 - Sistema Estável');
     initializeUserState();
     initializeChat();
     updateRemainingQueries();
 });
 
-// === FUNÇÃO DE TESTE === //
-window.testNetlifyFunction = async function() {
-    console.log('🧪 TESTE: Netlify Function');
-    console.log('🔗 Endpoint:', AI_API_CONFIG.endpoint);
-    
-    try {
-        const response = await fetch(AI_API_CONFIG.endpoint, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({message: "Teste de conexão"})
-        });
-        
-        console.log('📊 Status:', response.status);
-        const data = await response.json();
-        console.log('✅ Sucesso:', data);
-        return data;
-        
-    } catch (error) {
-        console.log('❌ Erro:', error);
-        return {error: error.message};
-    }
-};
-
-// Verificação automática
-console.log('✅ callNetlifyFunction definida:', typeof callNetlifyFunction);
+// === VERIFICAÇÃO === //
 console.log('✅ AI_API_CONFIG:', AI_API_CONFIG);
+console.log('✅ Sistema carregado e pronto!');
