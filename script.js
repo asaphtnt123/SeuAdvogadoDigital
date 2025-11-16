@@ -269,3 +269,22 @@ window.testConnection = async function() {
         return {error: error.message};
     }
 };
+// Alternar entre preços mensais e anuais
+document.getElementById('annualBilling').addEventListener('change', function() {
+    const annualPrices = document.querySelectorAll('.annual-price');
+    const monthlyPrices = document.querySelectorAll('.price');
+    
+    if (this.checked) {
+        annualPrices.forEach(el => el.classList.remove('d-none'));
+        monthlyPrices.forEach(el => el.classList.add('d-none'));
+    } else {
+        annualPrices.forEach(el => el.classList.add('d-none'));
+        monthlyPrices.forEach(el => el.classList.remove('d-none'));
+    }
+});
+
+function selectPlan(plan) {
+    // Aqui você implementaria a lógica de seleção de plano
+    console.log('Plano selecionado:', plan);
+    // Redirecionar para checkout ou abrir modal de assinatura
+}
