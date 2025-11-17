@@ -66,33 +66,29 @@ exports.handler = async function(event, context) {
         return sendSuccess(respostaLocal, 'Sistema', error.message);
     }
 };
-
-// === FUNÇÃO OPENAI COM TIMEOUT ===
 async function callOpenAIWithTimeout(message, apiKey) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10 segundos
-    
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
+        const response = await fetch("https://api.openai.com/v1/responses", {
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    {
-                        role: 'system',
-                        content: `Você é o "Dr. Lex IA", assistente jurídico brasileiro. Seja claro, use **negrito** e responda de forma educativa. Áreas: Trabalhista, Consumerista, Família, Civil. Sempre destaque que é orientação inicial.`
+                model: "gpt-4o-mini",
+                input: [
+                    { 
+                        role: "system", 
+                        content: `Você é o Dr. Lex IA, especialista em orientação jurídica brasileira.  
+Responda com clareza, objetividade e sempre enfatize que NÃO substitui advogado.` 
                     },
-                    {
-                        role: 'user',
-                        content: message
-                    }
+                    { role: "user", content: message }
                 ],
-                max_tokens: 600,
-                temperature: 0.7
+                max_output_tokens: 600,
+                temperature: 0.6
             }),
             signal: controller.signal
         });
@@ -105,8 +101,8 @@ async function callOpenAIWithTimeout(message, apiKey) {
         }
 
         const data = await response.json();
-        return data.choices[0].message.content;
-        
+        return data.output[0].content[0].text;
+
     } catch (error) {
         clearTimeout(timeout);
         throw error;
