@@ -3,11 +3,89 @@ console.log('🚀 Dr. Lex IA - Frontend carregado!');
 
 const MONETIZATION_SYSTEM = {
     plans: {
-        free: { name: "Grátis", dailyQueries: 100, price: 0 },
-        premium: { name: "Premium", dailyQueries: 100, price: 49.90 },
-        enterprise: { name: "Empresarial", dailyQueries: 1000, price: 299.90 }
+        free: {
+            name: "Grátis",
+            dailyQueries: 5,
+            price: 0
+        },
+        
+        starter: {
+            name: "Iniciante Jurídico",
+            monthlyQueries: 10,
+            price: 19.00,
+            annualPrice: 15.00,
+            responseTime: "até 4 horas",
+            documentModels: 3,
+            documentAnalysis: 0
+        },
+
+        individual: {
+            name: "Pessoa Física",
+            monthlyQueries: "ilimitado",
+            price: 49.00,
+            annualPrice: 39.00,
+            responseTime: "até 2 horas",
+            documentModels: 15,
+            documentAnalysis: 2,
+            priority: true,
+            history: "1 ano"
+        },
+
+        professional: {
+            name: "Profissional",
+            monthlyQueries: "ilimitado",
+            price: 97.00,
+            annualPrice: 78.00,
+            responseTime: "até 1 hora",
+            documentModels: 30,
+            documentAnalysis: 5,
+            supportPriority: true,
+            history: "ilimitado"
+        },
+
+        enterprise: {
+            name: "Empresarial",
+            monthlyQueries: "ilimitado",
+            price: 297.00,
+            annualPrice: 238.00,
+            responseTime: "até 30 minutos",
+            users: 3,
+            documentAnalysis: "ilimitado",
+            contractsLibrary: true,
+            whatsappSupport: true,
+            specialistConsulting: 1
+        }
     }
 };
+function checkUserLimit(userPlan, userUsage) {
+    const plan = MONETIZATION_SYSTEM.plans[userPlan];
+
+    if (!plan) return { allowed: false, reason: "Plano inválido." };
+
+    // FREE → limite diário
+    if (userPlan === "free") {
+        if (userUsage.daily >= plan.dailyQueries) {
+            return {
+                allowed: false,
+                reason: "Você atingiu o limite diário do plano Grátis (5 consultas)."
+            };
+        }
+    }
+
+    // STARTER → limite mensal
+    if (userPlan === "starter") {
+        if (userUsage.monthly >= plan.monthlyQueries) {
+            return {
+                allowed: false,
+                reason: `Você atingiu o limite de ${plan.monthlyQueries} consultas do seu plano Iniciante Jurídico.`
+            };
+        }
+    }
+
+    // Outros planos → ilimitado
+    return { allowed: true };
+}
+
 
 const AI_API_CONFIG = {
     endpoint: '/.netlify/functions/chat',
@@ -283,8 +361,46 @@ document.getElementById('annualBilling').addEventListener('change', function() {
     }
 });
 
-function selectPlan(plan) {
-    // Aqui você implementaria a lógica de seleção de plano
-    console.log('Plano selecionado:', plan);
-    // Redirecionar para checkout ou abrir modal de assinatura
+function selectPlan(planId) {
+    const plan = MONETIZATION_SYSTEM.plans[planId];
+    if (!plan) {
+        alert("Plano inválido.");
+        return;
+    }
+
+    // Salva plano escolhido no navegador
+    localStorage.setItem("selectedPlan", planId);
+
+    // Se tiver checkout Stripe, redireciona:
+    if (planId === "enterprise") {
+        window.location.href = "/contato-empresarial.html";
+        return;
+    }
+
+    window.location.href = "/checkout.html?plan=" + planId;
 }
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("annualBilling");
+
+    toggle.addEventListener("change", () => {
+        const isAnnual = toggle.checked;
+
+        document.querySelectorAll(".pricing-card").forEach(card => {
+            const annual = card.querySelector(".annual-price");
+            const monthly = card.querySelector(".amount");
+
+            if (annual) {
+                if (isAnnual) {
+                    annual.classList.remove("d-none");
+                    monthly.style.opacity = "0.4";
+                } else {
+                    annual.classList.add("d-none");
+                    monthly.style.opacity = "1";
+                }
+            }
+        });
+    });
+});
+
