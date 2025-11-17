@@ -7,11 +7,11 @@ const REQUEST_DELAY = 2000; // 2 segundos entre requests
 
 exports.handler = async function(event, context) {
     const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json'
-    };
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
+
 
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
@@ -50,7 +50,7 @@ exports.handler = async function(event, context) {
             console.log('🔄 Tentando OpenAI...');
             const respostaOpenAI = await callOpenAIWithTimeout(message, openaiKey);
             console.log('✅ OpenAI respondeu com sucesso');
-            return sendSuccess(respostaOpenAI, 'OpenAI GPT-3.5 Turbo');
+            return sendSuccess(respostaOpenAI, 'gpt-4o-mini');
             
         } catch (openaiError) {
             console.log('🔄 OpenAI falhou:', openaiError.message);
@@ -66,29 +66,33 @@ exports.handler = async function(event, context) {
         return sendSuccess(respostaLocal, 'Sistema', error.message);
     }
 };
+
+
 async function callOpenAIWithTimeout(message, apiKey) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
     try {
-        const response = await fetch("https://api.openai.com/v1/responses", {
-            method: "POST",
+        const response = await fetch('https://api.openai.com/v1/responses', {
+            method: 'POST',
             headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json"
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 input: [
-                    { 
-                        role: "system", 
-                        content: `Você é o Dr. Lex IA, especialista em orientação jurídica brasileira.  
-Responda com clareza, objetividade e sempre enfatize que NÃO substitui advogado.` 
+                    {
+                        role: "system",
+                        content: `Você é o Dr. Lex IA, assistente jurídico brasileiro. Seja claro, educativo e inclua avisos de que não substitui advogado.`
                     },
-                    { role: "user", content: message }
+                    {
+                        role: "user",
+                        content: message
+                    }
                 ],
                 max_output_tokens: 600,
-                temperature: 0.6
+                temperature: 0.7
             }),
             signal: controller.signal
         });
@@ -96,14 +100,14 @@ Responda com clareza, objetividade e sempre enfatize que NÃO substitui advogado
         clearTimeout(timeout);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+            const txt = await response.text();
+            throw new Error(`OpenAI API error: ${response.status} - ${txt}`);
         }
 
         const data = await response.json();
-        return data.output[0].content[0].text;
-
-    } catch (error) {
+        return data.output_text;
+    }
+    catch (error) {
         clearTimeout(timeout);
         throw error;
     }
